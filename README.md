@@ -133,13 +133,57 @@ Sistema web para que las empresas publiquen **ofertas de empleo y pasantías** y
 
 ## Modelo de datos
 
-> Pendiente: diagrama ER (lo agrega Jimmy).
+```mermaid
+erDiagram
+    empresas ||--o{ ofertas : "publica"
+    ofertas ||--o{ postulaciones : "recibe"
 
-| Tabla | Rol |
-|-------|-----|
-| `empresas` | Catálogo |
-| `ofertas` | Entidad principal |
-| `postulaciones` | Entidad relacionada |
+    empresas {
+        bigint id PK
+        varchar(150) nombre UK
+        varchar(100) rubro
+        varchar(150) correo_contacto UK
+        varchar(9) telefono "formato 0000-0000"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    ofertas {
+        bigint id PK
+        bigint empresa_id FK "restrict on delete"
+        varchar(150) titulo
+        text descripcion
+        enum modalidad "presencial, remota, hibrida"
+        enum tipo "empleo, pasantia"
+        decimal(10-2) salario_minimo "nullable"
+        decimal(10-2) salario_maximo "nullable"
+        date fecha_publicacion
+        date fecha_cierre
+        smallint vacantes "unsigned"
+        varchar(255) imagen "nullable"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    postulaciones {
+        bigint id PK
+        bigint oferta_id FK,UK "cascade on delete; UK compuesta con correo"
+        varchar(150) nombre_candidato
+        varchar(150) correo UK "UK compuesta con oferta_id"
+        varchar(100) carrera
+        varchar(255) enlace_cv
+        date fecha_postulacion
+        enum estado "recibida, en_revision, aceptada, rechazada (default recibida)"
+        timestamp created_at
+        timestamp updated_at
+    }
+```
+
+| Tabla | Descripción | Relación | Al eliminar | Justificación |
+|-------|-------------|----------|-------------|---------------|
+| `empresas` | Catálogo de empresas que publican ofertas (nombre y correo únicos). | 1:N con `ofertas` | — | Tabla padre; no depende de otra tabla. |
+| `ofertas` | Entidad principal: ofertas de empleo o pasantía de una empresa. | N:1 con `empresas` (`empresa_id`) · 1:N con `postulaciones` | **restrict** | No se puede borrar una empresa que todavía tiene ofertas, para no dejar ofertas sin empresa ni perder información por accidente. |
+| `postulaciones` | Entidad relacionada: candidatos que se postulan a una oferta. Un mismo correo solo puede postularse una vez por oferta (`unique(oferta_id, correo)`). | N:1 con `ofertas` (`oferta_id`) | **cascade** | Una postulación no tiene sentido sin su oferta: si se elimina la oferta, se eliminan sus postulaciones. |
 
 ---
 
