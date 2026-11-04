@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 280" width="400" height="280">
+    <rect width="400" height="280" fill="#f1f5f9"/>
+    <rect x="2" y="2" width="396" height="276" rx="8" fill="none" stroke="#e2e8f0" stroke-width="2"/>
+    <g transform="translate(0, 5)">
+        <!-- Maletín -->
+        <!-- Asa -->
+        <path d="M175 92 V80 C175 74 180 70 186 70 H214 C220 70 225 74 225 80 V92" fill="none" stroke="#64748b" stroke-width="5" stroke-linecap="round"/>
+        <!-- Cuerpo del maletín -->
+        <rect x="135" y="92" width="130" height="84" rx="8" fill="#e2e8f0" stroke="#64748b" stroke-width="4"/>
+        <!-- Correa / Línea divisoria central -->
+        <line x1="135" y1="126" x2="265" y2="126" stroke="#64748b" stroke-width="3"/>
+        <!-- Broche central -->
+        <rect x="189" y="119" width="22" height="14" rx="3" fill="#cbd5e1" stroke="#64748b" stroke-width="2"/>
+        <!-- Texto "Sin imagen" -->
+        <text x="200" y="215" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="16" font-weight="600" fill="#64748b" text-anchor="middle" letter-spacing="0.5">Sin imagen</text>
+    </g>
+</svg>
