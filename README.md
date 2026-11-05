@@ -208,11 +208,35 @@ erDiagram
 
 | Integrante | Tareas realizadas |
 |------------|-------------------|
-| Gustavo    |                   |
-| Jimmy      |                   |
-| Andrés     |                   |
-| Bryan      |                   |
-| Kevin      |                   |
+| Gustavo    | Creación del proyecto, configuración de MySQL/`.env.example`, README, `PanelController` y panel de inicio, integración de PR y etiqueta `v1.0`. |
+| Jimmy      | Migraciones de `empresas`, `ofertas` y `postulaciones` con llaves foráneas y restricciones; diagrama entidad-relación. |
+| Andrés     | Modelos Eloquent `Empresa`, `Oferta` y `Postulacion` (fillable, casts, relaciones, scope y accessor); `OfertaController` (index, show) y rutas resource. |
+| Bryan      | `EmpresaSeeder`, `OfertaFactory`, `PostulacionFactory` y `DatabaseSeeder` (datos de prueba). |
+| Kevin      | Layout Blade con Bootstrap, `estilos.css`, imagen por defecto, vistas de listado paginado y ficha de detalle. |
+
+---
+
+## Estado de la Fase 1
+
+- [x] Base de datos creada con migraciones (`empresas`, `ofertas`, `postulaciones`) con llaves foráneas y restricciones.
+- [x] Modelos Eloquent con relaciones, `fillable`, casts, scope `activas()` y accessors (`imagen_url`, `rango_salarial`).
+- [x] Datos de prueba con seeders y factories (6 empresas, 21 ofertas, 56 postulaciones).
+- [x] Listado paginado de ofertas (`/ofertas`).
+- [x] Ficha de detalle de cada oferta con su empresa y postulaciones (`/ofertas/{oferta}`).
+- [x] Panel de inicio con indicadores básicos (`/`).
+- [x] Interfaz con layout Blade, Bootstrap 5.3 por CDN y CSS propio.
+- [x] Trabajo integrado en `main` mediante pull requests y etiqueta `v1.0`.
+
+### Etiquetas de conceptos en el código
+
+| Etiqueta | Archivos donde aparece |
+|----------|------------------------|
+| `[MIGRACION]` | `database/migrations/*_create_empresas_table.php`, `*_create_ofertas_table.php`, `*_create_postulaciones_table.php` |
+| `[RELACION]` | `app/Models/Empresa.php`, `app/Models/Oferta.php`, `app/Models/Postulacion.php`, `database/migrations/*_create_ofertas_table.php`, `*_create_postulaciones_table.php` |
+| `[ENCAPSULAMIENTO]` | `app/Models/Empresa.php`, `app/Models/Oferta.php`, `app/Models/Postulacion.php` |
+| `[CRUD-READ]` | `app/Http/Controllers/OfertaController.php`, `app/Http/Controllers/PanelController.php`, `resources/views/ofertas/index.blade.php`, `resources/views/ofertas/show.blade.php`, `resources/views/panel/index.blade.php` |
+| `[INYECCION-DEPENDENCIAS]` | `app/Http/Controllers/OfertaController.php` |
+| `[SEEDER]` | `database/seeders/EmpresaSeeder.php` |
 
 ---
 
