@@ -200,7 +200,11 @@ erDiagram
 
 ## Capturas de pantalla
 
-> Pendiente.
+<img width="1678" height="897" alt="image" src="https://github.com/user-attachments/assets/fae9d700-94dd-499e-adf3-5d676d8306c3" />
+
+<img width="1897" height="917" alt="image" src="https://github.com/user-attachments/assets/09c7a167-1b90-4b07-9d13-f37517bd8fb7" />
+<img width="1662" height="912" alt="image" src="https://github.com/user-attachments/assets/8252e40c-7961-4aee-a1c8-483d9451cac5" />
+
 
 ---
 
