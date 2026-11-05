@@ -8,10 +8,10 @@ Universidad Católica de El Salvador (UNICAES)
 | Integrante | Usuario de GitHub |
 |------------|-------------------|
 | Gustavo    | [@Gu2tavo12](https://github.com/Gu2tavo12) |
-| Jimmy      | @usuario-jimmy    |
-| Andrés     | @usuario-andres   |
-| Bryan      | @usuario-bryan    |
-| Kevin      | @usuario-kevin    |
+| Jimmy      | [@Jimmy-ERC](https://github.com/Jimmy-ERC) |
+| Andrés     | [@andrees205](https://github.com/andrees205) |
+| Bryan      | [@Bryan-Escobar](https://github.com/Bryan-Escobar) |
+| Kevin      | [@kevRodrguez](https://github.com/kevRodrguez) |
 
 ---
 
