@@ -29,7 +29,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('ofertas.*') || request()->is('ofertas*') ? 'active' : '' }}" @if (request()->routeIs('ofertas.*') || request()->is('ofertas*')) aria-current="page" @endif href="{{ Route::has('ofertas.index') ? route('ofertas.index') : '#' }}">
+                        <a class="nav-link {{ request()->routeIs('ofertas.*') || request()->is('ofertas*') ? 'active' : '' }}" @if (request()->routeIs('ofertas.*') || request()->is('ofertas*')) aria-current="page" @endif href="{{ route('ofertas.index') }}">
                             <i class="bi bi-card-list me-1"></i>Ofertas
                         </a>
                     </li>
