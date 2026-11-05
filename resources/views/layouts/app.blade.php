@@ -15,7 +15,7 @@
 <body class="d-flex flex-column min-vh-100">
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary app-navbar shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="{{ url('/') }}">
+            <a class="navbar-brand fw-bold" href="{{ route('panel') }}">
                 <i class="bi bi-briefcase-fill me-2"></i>Bolsa de Empleo UNICAES
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContenido" aria-controls="navbarContenido" aria-expanded="false" aria-label="Alternar navegacion">
@@ -24,7 +24,7 @@
             <div class="collapse navbar-collapse" id="navbarContenido">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('/') ? 'active' : '' }}" @if (request()->is('/')) aria-current="page" @endif href="{{ url('/') }}">
+                        <a class="nav-link {{ request()->is('/') ? 'active' : '' }}" @if (request()->is('/')) aria-current="page" @endif href="{{ route('panel') }}">
                             <i class="bi bi-house-door me-1"></i>Inicio
                         </a>
                     </li>
