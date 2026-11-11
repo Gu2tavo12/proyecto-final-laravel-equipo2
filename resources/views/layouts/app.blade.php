@@ -38,6 +38,11 @@
                             <i class="bi bi-card-list me-1" aria-hidden="true"></i>Ofertas
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('empresas.*') ? 'active' : '' }}" @if (request()->routeIs('empresas.*')) aria-current="page" @endif href="{{ route('empresas.index') }}">
+                            <i class="bi bi-building me-1" aria-hidden="true"></i>Empresas
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
