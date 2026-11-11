@@ -9,6 +9,9 @@
             <h1 class="h3 mb-1">Catálogo de Empresas</h1>
             <p class="text-muted mb-0">Total de empresas registradas: {{ $empresas->total() }}</p>
         </div>
+        <a href="{{ route('empresas.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Registrar empresa
+        </a>
     </div>
 
     <div class="card shadow-sm border-0 mb-4">
@@ -47,6 +50,7 @@
                             <tr>
                                 <td colspan="6" class="text-center py-4 text-muted">
                                     No hay empresas registradas.
+                                    <a href="{{ route('empresas.create') }}" class="d-block mt-2">Registrar la primera empresa</a>
                                 </td>
                             </tr>
                         @endforelse

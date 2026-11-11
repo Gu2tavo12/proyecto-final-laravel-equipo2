@@ -87,4 +87,77 @@ class EmpresaCatalogoTest extends TestCase
     {
         $this->get('/empresas/999')->assertNotFound();
     }
+
+    private function datosValidos(array $cambios = []): array
+    {
+        return array_merge([
+            'nombre' => 'Nueva Empresa S.A.',
+            'rubro' => 'Comercio',
+            'correo_contacto' => 'rrhh@nueva.test',
+            'telefono' => '2555-0101',
+        ], $cambios);
+    }
+
+    public function test_formulario_de_registro_se_muestra_con_csrf(): void
+    {
+        $this->get(route('empresas.create'))
+            ->assertOk()
+            ->assertSee('name="_token"', false)
+            ->assertSee(route('empresas.store'), false);
+    }
+
+    public function test_registra_empresa_con_datos_validos(): void
+    {
+        $respuesta = $this->post(route('empresas.store'), $this->datosValidos(['id' => 999]));
+
+        $empresa = Empresa::firstWhere('correo_contacto', 'rrhh@nueva.test');
+        $this->assertNotNull($empresa);
+        $this->assertNotSame(999, $empresa->id);
+        $respuesta->assertRedirect(route('empresas.show', $empresa))
+            ->assertSessionHas('exito');
+    }
+
+    public function test_rechaza_campos_vacios_con_mensajes_en_espanol(): void
+    {
+        $this->from(route('empresas.create'))
+            ->post(route('empresas.store'), [])
+            ->assertRedirect(route('empresas.create'))
+            ->assertSessionHasErrors([
+                'nombre' => 'El nombre de la empresa es obligatorio.',
+                'rubro' => 'El rubro es obligatorio.',
+                'correo_contacto' => 'El correo de contacto es obligatorio.',
+                'telefono' => 'El teléfono es obligatorio.',
+            ]);
+
+        $this->assertDatabaseCount('empresas', 0);
+    }
+
+    public function test_rechaza_nombre_y_correo_duplicados(): void
+    {
+        $this->crearEmpresa(['nombre' => 'Nueva Empresa S.A.', 'correo_contacto' => 'rrhh@nueva.test']);
+
+        $this->post(route('empresas.store'), $this->datosValidos())
+            ->assertSessionHasErrors(['nombre', 'correo_contacto']);
+
+        $this->assertDatabaseCount('empresas', 1);
+    }
+
+    public function test_rechaza_telefono_con_formato_invalido(): void
+    {
+        foreach (['22223333', '2222-333', 'abcd-efgh', '2222-33334'] as $telefono) {
+            $this->post(route('empresas.store'), $this->datosValidos(['telefono' => $telefono]))
+                ->assertSessionHasErrors(['telefono' => 'El teléfono debe tener el formato 0000-0000.']);
+        }
+
+        $this->assertDatabaseCount('empresas', 0);
+    }
+
+    public function test_rechaza_textos_que_exceden_la_longitud(): void
+    {
+        $this->post(route('empresas.store'), $this->datosValidos([
+            'nombre' => str_repeat('a', 151),
+            'rubro' => str_repeat('b', 101),
+            'correo_contacto' => str_repeat('c', 141).'@empresa.test',
+        ]))->assertSessionHasErrors(['nombre', 'rubro', 'correo_contacto']);
+    }
 }

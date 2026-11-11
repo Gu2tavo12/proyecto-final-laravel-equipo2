@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreEmpresaRequest;
 use App\Models\Empresa;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 /**
@@ -40,5 +42,32 @@ class EmpresaController extends Controller
         ]);
 
         return view('empresas.show', compact('empresa'));
+    }
+
+    /**
+     * Formulario de registro.
+     *
+     * [CRUD-CREATE]
+     */
+    public function create(): View
+    {
+        return view('empresas.create');
+    }
+
+    /**
+     * Guarda una nueva empresa.
+     *
+     * [CRUD-CREATE]
+     * [INYECCION-DEPENDENCIAS] Laravel inyecta StoreEmpresaRequest y lo valida
+     * antes de ejecutar el metodo; si falla, regresa al formulario con errores.
+     * [VALIDACION] Solo se guardan los datos validados (y $fillable del modelo).
+     */
+    public function store(StoreEmpresaRequest $request): RedirectResponse
+    {
+        $empresa = Empresa::create($request->validated());
+
+        return redirect()
+            ->route('empresas.show', $empresa)
+            ->with('exito', 'Empresa registrada correctamente.');
     }
 }
