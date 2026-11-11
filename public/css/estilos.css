@@ -11,6 +11,7 @@
     --color-texto: #1e293b;
     --color-texto-muted: #64748b;
     --color-borde: #e2e8f0;
+    --color-enfoque: #0284c7;
 
     /* Estados */
     --color-activa-bg: #dcfce7;
@@ -36,10 +37,34 @@ body {
     background-color: var(--color-fondo);
     color: var(--color-texto);
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    text-rendering: optimizeLegibility;
 }
 
 main {
     flex: 1 0 auto;
+}
+
+/* ==========================================================================
+   Accesibilidad y Foco Visible
+   ========================================================================== */
+:focus-visible {
+    outline: 2px solid var(--color-enfoque) !important;
+    outline-offset: 2px !important;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.btn:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible,
+.nav-link:focus-visible,
+.navbar-toggler:focus-visible {
+    outline: 2px solid var(--color-enfoque) !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.3) !important;
 }
 
 /* ==========================================================================
@@ -137,6 +162,47 @@ main {
 }
 
 /* ==========================================================================
+   Formularios y Controles
+   ========================================================================== */
+.form-label {
+    font-weight: 600;
+    color: var(--color-texto);
+    margin-bottom: 0.35rem;
+    font-size: 0.9375rem;
+}
+
+.form-label .required-indicator {
+    color: #dc3545;
+    margin-left: 0.2rem;
+}
+
+.form-control,
+.form-select {
+    border-color: #cbd5e1;
+    border-radius: 0.5rem;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.9375rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--color-primario);
+    box-shadow: 0 0 0 0.25rem rgba(13, 71, 161, 0.15);
+}
+
+.form-text {
+    color: var(--color-texto-muted);
+    font-size: 0.8125rem;
+    margin-top: 0.35rem;
+}
+
+.invalid-feedback {
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+/* ==========================================================================
    Imágenes y Miniaturas
    ========================================================================== */
 .miniatura {
@@ -204,11 +270,29 @@ main {
 }
 
 /* ==========================================================================
-   Ajustes Responsivos (< 576px)
+   Ajustes Responsivos y Adaptación a Móviles (360px - 576px)
    ========================================================================== */
 @media (max-width: 575.98px) {
+    .app-navbar {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+
     .app-navbar .navbar-brand {
         font-size: 1.05rem;
+    }
+
+    .app-navbar .navbar-collapse {
+        margin-top: 0.75rem;
+        padding: 0.5rem 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .app-navbar .nav-link {
+        padding: 0.65rem 0.75rem;
+        min-height: 44px; /* Tamaño mínimo táctil recomendado (44x44) */
+        display: flex;
+        align-items: center;
     }
 
     .container {
@@ -219,25 +303,71 @@ main {
     .card-header,
     .card-body,
     .card-footer {
-        padding: 0.85rem 1rem;
+        padding: 0.85rem;
     }
 
     .miniatura {
-        width: 56px;
-        height: 56px;
+        width: 52px;
+        height: 52px;
     }
 
     .imagen-oferta {
         max-height: 200px;
     }
 
+    .table-responsive {
+        border-radius: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: 0.5rem;
+    }
+
     .table thead th,
     .table tbody td {
         padding: 0.65rem 0.5rem;
-        font-size: 0.85rem;
+        font-size: 0.8125rem;
+        white-space: nowrap;
+    }
+
+    /* Adaptación de botones en controles móviles */
+    .btn {
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .app-footer p {
-        font-size: 0.78rem;
+        font-size: 0.75rem;
+        line-height: 1.4;
+    }
+}
+
+/* Pantallas extra pequeñas (360px) */
+@media (max-width: 380px) {
+    .app-navbar .navbar-brand {
+        font-size: 0.95rem;
+    }
+
+    .container {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    .card-body {
+        padding: 0.75rem;
+    }
+
+    .miniatura {
+        width: 44px;
+        height: 44px;
+    }
+
+    .imagen-oferta {
+        max-height: 160px;
+    }
+
+    .btn {
+        font-size: 0.875rem;
+        padding: 0.4rem 0.75rem;
     }
 }
