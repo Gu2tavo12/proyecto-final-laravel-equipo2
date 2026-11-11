@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreEmpresaRequest;
 use App\Http\Requests\UpdateEmpresaRequest;
 use App\Models\Empresa;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -96,5 +97,48 @@ class EmpresaController extends Controller
         return redirect()
             ->route('empresas.show', $empresa)
             ->with('exito', 'Empresa actualizada correctamente.');
+    }
+
+    /**
+     * Elimina una empresa solo si no tiene ofertas.
+     *
+     * [CRUD-DELETE] La FK ofertas.empresa_id es restrictOnDelete: la BD impide
+     * borrar una empresa con ofertas. Se comprueba antes para informar el motivo
+     * y, si otra peticion crea una oferta entre la comprobacion y el borrado,
+     * la violacion de FK se traduce a un mensaje comprensible.
+     */
+    public function destroy(Empresa $empresa): RedirectResponse
+    {
+        $mensajeConOfertas = 'No se puede eliminar «'.$empresa->nombre.'» porque tiene ofertas registradas. '
+            .'Elimine o reasigne primero sus ofertas.';
+
+        if ($empresa->ofertas()->exists()) {
+            return redirect()->route('empresas.show', $empresa)->with('error', $mensajeConOfertas);
+        }
+
+        try {
+            $empresa->delete();
+        } catch (QueryException $e) {
+            if (! $this->esViolacionDeLlaveForanea($e)) {
+                throw $e; // Otros errores se propagan
+            }
+
+            return redirect()->route('empresas.show', $empresa)->with('error', $mensajeConOfertas);
+        }
+
+        return redirect()
+            ->route('empresas.index')
+            ->with('exito', 'Empresa eliminada correctamente.');
+    }
+
+    /**
+     * MySQL: codigo 1451 (fila referenciada). SQLite: "FOREIGN KEY constraint failed".
+     */
+    private function esViolacionDeLlaveForanea(QueryException $e): bool
+    {
+        $codigo = $e->errorInfo[1] ?? null;
+
+        return $codigo === 1451
+            || str_contains($e->getMessage(), 'FOREIGN KEY constraint failed');
     }
 }

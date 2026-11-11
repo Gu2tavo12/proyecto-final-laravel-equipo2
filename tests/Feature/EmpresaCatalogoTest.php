@@ -201,6 +201,59 @@ class EmpresaCatalogoTest extends TestCase
         $this->assertSame($original, $empresa->fresh()->nombre);
     }
 
+    public function test_elimina_empresa_sin_ofertas(): void
+    {
+        $empresa = $this->crearEmpresa();
+
+        $this->delete(route('empresas.destroy', $empresa))
+            ->assertRedirect(route('empresas.index'))
+            ->assertSessionHas('exito');
+
+        $this->assertModelMissing($empresa);
+    }
+
+    public function test_no_elimina_empresa_con_ofertas_e_informa_el_motivo(): void
+    {
+        $empresa = $this->crearEmpresa();
+        $oferta = $this->crearOferta($empresa);
+
+        $this->delete(route('empresas.destroy', $empresa))
+            ->assertRedirect(route('empresas.show', $empresa))
+            ->assertSessionHas('error', fn ($m) => str_contains($m, 'tiene ofertas registradas'));
+
+        $this->assertModelExists($empresa);
+        $this->assertModelExists($oferta);
+    }
+
+    public function test_traduce_colision_de_fk_por_concurrencia(): void
+    {
+        $empresa = $this->crearEmpresa();
+
+        // Simula otra peticion que crea una oferta despues de la comprobacion
+        Empresa::deleting(function (Empresa $e) {
+            Oferta::factory()->create(['empresa_id' => $e->id]);
+        });
+
+        $this->delete(route('empresas.destroy', $empresa))
+            ->assertRedirect(route('empresas.show', $empresa))
+            ->assertSessionHas('error');
+
+        $this->assertModelExists($empresa);
+    }
+
+    public function test_propaga_errores_que_no_son_de_llave_foranea(): void
+    {
+        $empresa = $this->crearEmpresa();
+        Empresa::deleting(function () {
+            throw new \Illuminate\Database\QueryException('sqlite', 'delete', [], new \PDOException('disco lleno'));
+        });
+
+        $this->withoutExceptionHandling();
+        $this->expectException(\Illuminate\Database\QueryException::class);
+
+        $this->delete(route('empresas.destroy', $empresa));
+    }
+
     public function test_rechaza_textos_que_exceden_la_longitud(): void
     {
         $this->post(route('empresas.store'), $this->datosValidos([

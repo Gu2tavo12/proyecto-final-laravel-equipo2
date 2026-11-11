@@ -47,6 +47,15 @@
                                     <a href="{{ route('empresas.edit', $empresa) }}" class="btn btn-sm btn-outline-secondary">
                                         <i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar
                                     </a>
+                                    {{-- [CRUD-DELETE] [SEGURIDAD] DELETE con CSRF y confirmacion previa --}}
+                                    <form action="{{ route('empresas.destroy', $empresa) }}" method="POST" class="d-inline"
+                                          data-confirmar-eliminar="¿Eliminar la empresa «{{ $empresa->nombre }}»? Esta acción no se puede deshacer.">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash me-1" aria-hidden="true"></i>Eliminar
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                         @empty

@@ -11,5 +11,4 @@ Route::resource('ofertas', OfertaController::class)->only(['index', 'show']); //
 
 // Catalogo de empresas. parameters() fija el nombre {empresa} para el binding Empresa $empresa.
 Route::resource('empresas', EmpresaController::class)
-    ->parameters(['empresas' => 'empresa'])
-    ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+    ->parameters(['empresas' => 'empresa']);
