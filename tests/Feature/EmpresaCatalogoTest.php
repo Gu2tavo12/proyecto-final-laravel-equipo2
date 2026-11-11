@@ -152,6 +152,55 @@ class EmpresaCatalogoTest extends TestCase
         $this->assertDatabaseCount('empresas', 0);
     }
 
+    public function test_formulario_de_edicion_precarga_valores_y_usa_put(): void
+    {
+        $empresa = $this->crearEmpresa(['nombre' => 'Original S.A.']);
+
+        $this->get(route('empresas.edit', $empresa))
+            ->assertOk()
+            ->assertSee('value="Original S.A."', false)
+            ->assertSee('name="_method" value="PUT"', false)
+            ->assertSee('name="_token"', false);
+    }
+
+    public function test_guardar_con_los_mismos_datos_funciona(): void
+    {
+        $empresa = $this->crearEmpresa();
+
+        $this->put(route('empresas.update', $empresa), $empresa->only(['nombre', 'rubro', 'correo_contacto', 'telefono']))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('empresas.show', $empresa))
+            ->assertSessionHas('exito');
+    }
+
+    public function test_actualiza_los_datos_de_la_empresa(): void
+    {
+        $empresa = $this->crearEmpresa();
+
+        $this->put(route('empresas.update', $empresa), $this->datosValidos(['rubro' => 'Logística']))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('Logística', $empresa->fresh()->rubro);
+    }
+
+    public function test_edicion_rechaza_duplicado_de_otra_empresa_y_conserva_entradas(): void
+    {
+        $otra = $this->crearEmpresa(['nombre' => 'Ocupada S.A.', 'correo_contacto' => 'ocupado@empresa.test']);
+        $empresa = $this->crearEmpresa();
+        $original = $empresa->nombre;
+
+        $this->from(route('empresas.edit', $empresa))
+            ->put(route('empresas.update', $empresa), $this->datosValidos([
+                'nombre' => $otra->nombre,
+                'correo_contacto' => $otra->correo_contacto,
+            ]))
+            ->assertRedirect(route('empresas.edit', $empresa))
+            ->assertSessionHasErrors(['nombre', 'correo_contacto'])
+            ->assertSessionHasInput('nombre', 'Ocupada S.A.');
+
+        $this->assertSame($original, $empresa->fresh()->nombre);
+    }
+
     public function test_rechaza_textos_que_exceden_la_longitud(): void
     {
         $this->post(route('empresas.store'), $this->datosValidos([

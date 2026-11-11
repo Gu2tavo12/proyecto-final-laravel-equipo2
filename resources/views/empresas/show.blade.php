@@ -17,6 +17,11 @@
                     <h1 class="h3 fw-bold mb-1">{{ $empresa->nombre }}</h1>
                     <p class="text-muted mb-0"><i class="bi bi-briefcase me-1" aria-hidden="true"></i>{{ $empresa->rubro }}</p>
                 </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('empresas.edit', $empresa) }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar
+                    </a>
+                </div>
             </div>
 
             <div class="row g-3">

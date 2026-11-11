@@ -44,6 +44,9 @@
                                     <a href="{{ route('empresas.show', $empresa) }}" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-eye me-1" aria-hidden="true"></i>Ver
                                     </a>
+                                    <a href="{{ route('empresas.edit', $empresa) }}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar
+                                    </a>
                                 </td>
                             </tr>
                         @empty

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreEmpresaRequest;
+use App\Http\Requests\UpdateEmpresaRequest;
 use App\Models\Empresa;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -69,5 +70,31 @@ class EmpresaController extends Controller
         return redirect()
             ->route('empresas.show', $empresa)
             ->with('exito', 'Empresa registrada correctamente.');
+    }
+
+    /**
+     * Formulario de edicion con los valores actuales precargados.
+     *
+     * [CRUD-UPDATE]
+     */
+    public function edit(Empresa $empresa): View
+    {
+        return view('empresas.edit', compact('empresa'));
+    }
+
+    /**
+     * Actualiza la empresa.
+     *
+     * [CRUD-UPDATE]
+     * [INYECCION-DEPENDENCIAS] Se inyectan el Form Request y la Empresa (binding).
+     * [VALIDACION] La unicidad ignora a la propia empresa (Rule::unique()->ignore()).
+     */
+    public function update(UpdateEmpresaRequest $request, Empresa $empresa): RedirectResponse
+    {
+        $empresa->update($request->validated());
+
+        return redirect()
+            ->route('empresas.show', $empresa)
+            ->with('exito', 'Empresa actualizada correctamente.');
     }
 }
