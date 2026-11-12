@@ -43,6 +43,11 @@
                             <i class="bi bi-building me-1" aria-hidden="true"></i>Empresas
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('postulaciones.*') ? 'active' : '' }}" @if (request()->routeIs('postulaciones.*')) aria-current="page" @endif href="{{ route('postulaciones.index') }}">
+                            <i class="bi bi-people me-1" aria-hidden="true"></i>Postulaciones
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
