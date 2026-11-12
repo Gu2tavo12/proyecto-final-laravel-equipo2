@@ -145,6 +145,25 @@ class PostulacionController extends Controller
     }
 
     /**
+     * Elimina solo la postulacion indicada (solo por DELETE).
+     *
+     * [CRUD-DELETE] La oferta y las demas postulaciones se conservan: la FK
+     * cascade va de ofertas a postulaciones, no al reves.
+     * [SEGURIDAD] La ruta solo responde a DELETE con token CSRF; un GET a la
+     * misma URL muestra la ficha y no borra nada.
+     * [INYECCION-DEPENDENCIAS] Route model binding: 404 si no existe.
+     */
+    public function destroy(Postulacion $postulacion): RedirectResponse
+    {
+        $ofertaId = $postulacion->oferta_id;
+        $postulacion->delete();
+
+        return redirect()
+            ->route('postulaciones.index', ['oferta_id' => $ofertaId])
+            ->with('exito', 'Postulación de '.$postulacion->nombre_candidato.' eliminada correctamente.');
+    }
+
+    /**
      * Ofertas que aun reciben postulaciones (scope activas()), con su empresa.
      *
      * @return Collection<int, Oferta>

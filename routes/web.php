@@ -16,7 +16,8 @@ Route::resource('ofertas', OfertaController::class);
 Route::resource('empresas', EmpresaController::class)
     ->parameters(['empresas' => 'empresa']);
 
-// Postulaciones. parameters() fija {postulacion} (el singular en ingles seria "postulacione").
+// Postulaciones: CRUD completo. parameters() fija {postulacion} (el singular en ingles
+// seria "postulacione"). create e index aceptan ?oferta_id= para preseleccionar o filtrar.
+// [SEGURIDAD] destroy solo responde a DELETE (con @csrf y @method('DELETE')).
 Route::resource('postulaciones', PostulacionController::class)
-    ->parameters(['postulaciones' => 'postulacion'])
-    ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+    ->parameters(['postulaciones' => 'postulacion']);

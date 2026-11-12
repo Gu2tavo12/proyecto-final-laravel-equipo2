@@ -23,6 +23,15 @@
                             <a href="{{ route('postulaciones.edit', $postulacion) }}" class="btn btn-outline-secondary btn-sm">
                                 <i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar
                             </a>
+                            {{-- [CRUD-DELETE] [SEGURIDAD] DELETE con CSRF y confirmacion previa (modal comun del layout) --}}
+                            <form action="{{ route('postulaciones.destroy', $postulacion) }}" method="POST"
+                                  data-confirmar-eliminar="¿Eliminar la postulación de «{{ $postulacion->nombre_candidato }}» a «{{ $postulacion->oferta->titulo }}»? La oferta se conserva. Esta acción no se puede deshacer.">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-trash me-1" aria-hidden="true"></i>Eliminar
+                                </button>
+                            </form>
                         </div>
                     </div>
 
