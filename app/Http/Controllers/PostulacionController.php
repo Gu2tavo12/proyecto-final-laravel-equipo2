@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePostulacionRequest;
 use App\Models\Oferta;
 use App\Models\Postulacion;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 /**
@@ -41,6 +45,55 @@ class PostulacionController extends Controller
     }
 
     /**
+     * Formulario de registro. Solo ofrece ofertas activas y, si llega
+     * ?oferta_id= de una oferta activa (enlace desde la ficha de la oferta),
+     * la deja preseleccionada.
+     *
+     * [CRUD-CREATE]
+     * [INYECCION-DEPENDENCIAS] Laravel inyecta el Request actual.
+     */
+    public function create(Request $request): View
+    {
+        $ofertas = $this->ofertasActivas();
+        $ofertaId = filter_var($request->query('oferta_id'), FILTER_VALIDATE_INT);
+        $ofertaSeleccionada = $ofertas->contains('id', $ofertaId) ? $ofertaId : null;
+
+        return view('postulaciones.create', compact('ofertas', 'ofertaSeleccionada'));
+    }
+
+    /**
+     * Registra la postulacion de un candidato.
+     *
+     * [CRUD-CREATE]
+     * [INYECCION-DEPENDENCIAS] Laravel inyecta StorePostulacionRequest y lo valida
+     * antes de ejecutar el metodo; si falla, regresa al formulario con errores y old().
+     */
+    public function store(StorePostulacionRequest $request): RedirectResponse
+    {
+        // [SEGURIDAD] Solo datos validados. La fecha y el estado los asigna el
+        // servidor: se ignoran aunque el cliente los envie en el POST.
+        $datos = [
+            ...$request->validated(),
+            'fecha_postulacion' => today(),
+            'estado' => 'recibida',
+        ];
+
+        try {
+            $postulacion = Postulacion::create($datos);
+        } catch (UniqueConstraintViolationException) {
+            // [REGLA-NEGOCIO] Respaldo de la BD: si dos envios iguales pasan la validacion
+            // al mismo tiempo, unique(oferta_id, correo) rechaza el segundo.
+            return back()
+                ->withInput()
+                ->withErrors(['correo' => 'Este correo ya está postulado a esta oferta.']);
+        }
+
+        return redirect()
+            ->route('postulaciones.show', $postulacion)
+            ->with('exito', 'Postulación registrada correctamente.');
+    }
+
+    /**
      * Ficha de una postulacion con su oferta y la empresa de la oferta.
      *
      * [CRUD-READ]
@@ -52,6 +105,16 @@ class PostulacionController extends Controller
         $postulacion->load('oferta.empresa');
 
         return view('postulaciones.show', compact('postulacion'));
+    }
+
+    /**
+     * Ofertas que aun reciben postulaciones (scope activas()), con su empresa.
+     *
+     * @return Collection<int, Oferta>
+     */
+    private function ofertasActivas(): Collection
+    {
+        return Oferta::activas()->with('empresa')->orderBy('titulo')->get();
     }
 
     /**

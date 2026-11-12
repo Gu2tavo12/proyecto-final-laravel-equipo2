@@ -9,6 +9,10 @@
             <h1 class="h3 mb-1">Postulaciones</h1>
             <p class="text-muted mb-0">Resultados: {{ $postulaciones->total() }}</p>
         </div>
+        {{-- Con una oferta filtrada, el registro la preselecciona (si sigue activa) --}}
+        <a href="{{ route('postulaciones.create', array_filter(['oferta_id' => $filtros['oferta_id']])) }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Registrar postulación
+        </a>
     </div>
 
     {{-- Filtros por GET: la paginacion los conserva con withQueryString() --}}
