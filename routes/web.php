@@ -19,4 +19,4 @@ Route::resource('empresas', EmpresaController::class)
 // Postulaciones. parameters() fija {postulacion} (el singular en ingles seria "postulacione").
 Route::resource('postulaciones', PostulacionController::class)
     ->parameters(['postulaciones' => 'postulacion'])
-    ->only(['index', 'create', 'store', 'show']);
+    ->only(['index', 'create', 'store', 'show', 'edit', 'update']);

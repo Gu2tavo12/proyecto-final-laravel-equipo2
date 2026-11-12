@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePostulacionRequest;
+use App\Http\Requests\UpdatePostulacionRequest;
 use App\Models\Oferta;
 use App\Models\Postulacion;
 use Illuminate\Database\Eloquent\Builder;
@@ -105,6 +106,42 @@ class PostulacionController extends Controller
         $postulacion->load('oferta.empresa');
 
         return view('postulaciones.show', compact('postulacion'));
+    }
+
+    /**
+     * Formulario de edicion con los datos actuales.
+     *
+     * [CRUD-UPDATE] Una postulacion historica se puede gestionar aunque su
+     * oferta ya este cerrada: la regla de oferta activa solo aplica al registro.
+     * [INYECCION-DEPENDENCIAS] Route model binding: 404 si no existe.
+     */
+    public function edit(Postulacion $postulacion): View
+    {
+        $postulacion->load('oferta.empresa');
+
+        return view('postulaciones.edit', compact('postulacion'));
+    }
+
+    /**
+     * Actualiza los datos del candidato y el estado de la postulacion.
+     *
+     * [CRUD-UPDATE] validated() no incluye oferta_id ni fecha_postulacion:
+     * ambas conservan su valor original.
+     * [INYECCION-DEPENDENCIAS] UpdatePostulacionRequest (validacion) y Postulacion (binding).
+     */
+    public function update(UpdatePostulacionRequest $request, Postulacion $postulacion): RedirectResponse
+    {
+        try {
+            $postulacion->update($request->validated());
+        } catch (UniqueConstraintViolationException) {
+            return back()
+                ->withInput()
+                ->withErrors(['correo' => 'Este correo ya está postulado a esta oferta.']);
+        }
+
+        return redirect()
+            ->route('postulaciones.show', $postulacion)
+            ->with('exito', 'Postulación actualizada correctamente.');
     }
 
     /**

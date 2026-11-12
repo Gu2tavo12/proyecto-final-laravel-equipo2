@@ -19,6 +19,11 @@
                             <h1 class="h3 fw-bold mb-1">{{ $postulacion->nombre_candidato }}</h1>
                             @include('postulaciones._estado', ['estado' => $postulacion->estado])
                         </div>
+                        <div class="d-flex gap-2">
+                            <a href="{{ route('postulaciones.edit', $postulacion) }}" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar
+                            </a>
+                        </div>
                     </div>
 
                     <dl class="row mb-0">
