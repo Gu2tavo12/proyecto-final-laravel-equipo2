@@ -201,6 +201,35 @@ class OfertaController extends Controller
     }
 
     /**
+     * Elimina la oferta (solo por DELETE) y despues su imagen.
+     *
+     * [CRUD-DELETE] La BD borra en cascada sus postulaciones (cascadeOnDelete).
+     * El archivo se borra solo cuando el registro ya se elimino, para no dejar
+     * una oferta apuntando a una imagen inexistente.
+     * [INYECCION-DEPENDENCIAS] Route model binding: 404 si la oferta no existe.
+     */
+    public function destroy(Oferta $oferta): RedirectResponse
+    {
+        $imagen = $oferta->imagen;
+
+        try {
+            $oferta->delete();
+        } catch (Throwable $e) {
+            report($e);
+
+            return redirect()
+                ->route('ofertas.show', $oferta)
+                ->with('error', 'No se pudo eliminar la oferta. Intenta de nuevo.');
+        }
+
+        $this->eliminarImagen($imagen);
+
+        return redirect()
+            ->route('ofertas.index')
+            ->with('exito', 'Oferta eliminada correctamente.');
+    }
+
+    /**
      * Normaliza los filtros del GET: texto recortado y acotado, y solo valores
      * conocidos de modalidad y tipo (cualquier otro valor se ignora).
      *
