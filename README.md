@@ -227,11 +227,74 @@ fecha de cierre es hoy o posterior.
 
 ## Capturas de pantalla
 
-<img width="1678" height="897" alt="image" src="https://github.com/user-attachments/assets/fae9d700-94dd-499e-adf3-5d676d8306c3" />
+Las capturas muestran la Fase 2 integrada con datos ficticios en una base desechable. El panel muestra 20 ofertas, 16 activas, 4 cerradas, 6 empresas y 40 postulaciones. Las modalidades activas del reporte suman 16 (5 presenciales, 4 remotas y 7 híbridas).
 
-<img width="1897" height="917" alt="image" src="https://github.com/user-attachments/assets/09c7a167-1b90-4b07-9d13-f37517bd8fb7" />
-<img width="1662" height="912" alt="image" src="https://github.com/user-attachments/assets/8252e40c-7961-4aee-a1c8-483d9451cac5" />
+![Panel con indicadores y accesos a los cuatro módulos](docs/capturas/panel.jpg)
 
+![Reporte con ofertas activas por modalidad, postulaciones por oferta y ranking por vacantes activas](docs/capturas/reporte.jpg)
+
+<details>
+<summary>Reporte con cero postulaciones y panel móvil</summary>
+
+![Segunda página del reporte con cero postulaciones para Diseño UX/UI](docs/capturas/reporte-cero.jpg)
+
+![Panel móvil con navegación plegable](docs/capturas/panel-movil.jpg)
+
+</details>
+
+<details>
+<summary>Ofertas · listado filtrado, ficha, alta, edición y confirmación</summary>
+
+![Búsqueda de Pasantía en Desarrollo Web con los filtros Remota y Pasantía](docs/capturas/ofertas-filtradas.jpg)
+
+![Ficha de Desarrollador Laravel Senior con la imagen predeterminada, la empresa y sus siete postulaciones](docs/capturas/oferta-ficha.jpg)
+
+![Formulario de publicación de una oferta](docs/capturas/oferta-alta.jpg)
+
+![Formulario de edición con los datos de la oferta](docs/capturas/oferta-edicion.jpg)
+
+![Modal de confirmación con la advertencia de eliminación en cascada](docs/capturas/oferta-confirmacion.jpg)
+
+</details>
+
+<details>
+<summary>Empresas · catálogo, ficha y edición</summary>
+
+![Catálogo de las seis empresas ficticias](docs/capturas/empresas.jpg)
+
+![Ficha de TecnoSoluciones Cuscatlán con sus ofertas](docs/capturas/empresa-ficha.jpg)
+
+![Formulario de edición de los datos de una empresa](docs/capturas/empresa-edicion.jpg)
+
+</details>
+
+<details>
+<summary>Postulaciones · listado, ficha, alta y edición</summary>
+
+![Listado de postulaciones con filtros y estados](docs/capturas/postulaciones.jpg)
+
+![Ficha de Ana Demo con la oferta y el estado de su postulación](docs/capturas/postulacion-ficha.jpg)
+
+![Formulario para registrar una postulación en una oferta activa](docs/capturas/postulacion-alta.jpg)
+
+![Edición de los datos y el estado de una postulación](docs/capturas/postulacion-edicion.jpg)
+
+</details>
+
+<details>
+<summary>Validación del servidor y recuperación de la entrada anterior</summary>
+
+Los formularios llevan `novalidate`. Las imágenes muestran los errores devueltos por Laravel tras enviar los datos inválidos y los campos repoblados con `old()`.
+
+![Alta de oferta con cero vacantes y cierre igual a la publicación, con título y descripción conservados](docs/capturas/oferta-alta-errores.jpg)
+
+![Edición de oferta con salario máximo inferior al mínimo y el título modificado conservado](docs/capturas/oferta-edicion-errores.jpg)
+
+![Alta de empresa con correo y teléfono inválidos y nombre conservado](docs/capturas/empresa-alta-errores.jpg)
+
+![Alta de postulación con correo duplicado y URL de CV inválida, con los datos de Ana Demo conservados](docs/capturas/postulacion-alta-errores.jpg)
+
+</details>
 
 ---
 
