@@ -48,6 +48,11 @@
                             <i class="bi bi-people me-1" aria-hidden="true"></i>Postulaciones
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('reporte.index') ? 'active' : '' }}" @if (request()->routeIs('reporte.index')) aria-current="page" @endif href="{{ route('reporte.index') }}">
+                            <i class="bi bi-bar-chart me-1" aria-hidden="true"></i>Reporte
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
