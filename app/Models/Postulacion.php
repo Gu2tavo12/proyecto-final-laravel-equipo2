@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -52,6 +53,25 @@ class Postulacion extends Model
         return [
             'fecha_postulacion' => 'date',
         ];
+    }
+
+    /**
+     * Accessor enlace_cv_seguro: el enlace del CV solo si es una URL HTTP/HTTPS;
+     * en otro caso (javascript:, data:, texto suelto...) devuelve null.
+     *
+     * [SEGURIDAD] Blade escapa el texto, pero no impide un href "javascript:...";
+     * las vistas usan este accessor para no generar enlaces peligrosos.
+     */
+    protected function enlaceCvSeguro(): Attribute
+    {
+        return Attribute::get(function (): ?string {
+            $esquema = strtolower((string) parse_url((string) $this->enlace_cv, PHP_URL_SCHEME));
+
+            return in_array($esquema, ['http', 'https'], true)
+                && filter_var($this->enlace_cv, FILTER_VALIDATE_URL) !== false
+                    ? $this->enlace_cv
+                    : null;
+        });
     }
 
     /**
