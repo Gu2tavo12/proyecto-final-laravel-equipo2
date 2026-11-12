@@ -9,7 +9,7 @@ Universidad Católica de El Salvador (UNICAES)
 |------------|-------------------|
 | Gustavo    | [@Gu2tavo12](https://github.com/Gu2tavo12) |
 | Jimmy      | [@Jimmy-ERC](https://github.com/Jimmy-ERC) |
-| Andrés     | [@andrees205](https://github.com/andrees205) |
+| Josué / Andrés Galán | [@andrees205](https://github.com/andrees205) |
 | Bryan      | [@Bryan-Escobar](https://github.com/Bryan-Escobar) |
 | Kevin      | [@kevRodrguez](https://github.com/kevRodrguez) |
 
@@ -28,14 +28,13 @@ Sistema web para que las empresas publiquen **ofertas de empleo y pasantías** y
 - Listado paginado de ofertas.
 - Ficha (detalle) de cada oferta.
 
-### Fase 2
+### Fase 2 · Cambios respecto a la Fase 1
 
-- CRUD completo de ofertas, empresas y postulaciones.
-- Registro de postulaciones de estudiantes.
-- Validación de formularios.
-- Carga de imágenes.
-- Reglas de negocio del caso (ver más abajo).
-- Panel y reporte.
+- El listado de ofertas incorpora búsqueda y filtros por modalidad y tipo, con paginación. La ficha enlaza la empresa y las postulaciones.
+- Ofertas, empresas y postulaciones se pueden registrar, consultar, editar y eliminar con confirmación. Las postulaciones también se pueden filtrar y cambiar de estado.
+- Los formularios validan en el servidor, conservan la entrada anterior y muestran los errores por campo.
+- Las ofertas admiten una imagen opcional con vista previa, reemplazo, limpieza al eliminar e imagen predeterminada.
+- El panel incorpora accesos a los cuatro módulos y el reporte reúne los tres indicadores del Caso 7.
 
 ---
 
@@ -43,11 +42,11 @@ Sistema web para que las empresas publiquen **ofertas de empleo y pasantías** y
 
 | Componente | Versión / detalle |
 |------------|-------------------|
-| PHP        | 8.3 o superior |
-| Composer   | 2.x |
-| Framework  | Laravel 13 |
-| Base de datos | MySQL (XAMPP) |
-| Extensiones PHP | `pdo_mysql`, `fileinfo`, `mbstring` |
+| PHP        | 8.4 o superior compatible con el lock. Las dependencias Symfony bloqueadas requieren PHP 8.4. |
+| Composer   | 2.2 o posterior dentro de Composer 2 |
+| Framework  | Laravel 13.40.0 en `composer.lock` |
+| Base de datos | MySQL. También se puede usar MariaDB de XAMPP mediante la conexión `mysql`. |
+| Extensiones PHP | Para la aplicación y las dependencias, habilitar `pdo_mysql`, `fileinfo`, `mbstring`, `ctype`, `dom`, `filter`, `hash`, `iconv`, `json`, `libxml`, `openssl`, `pcre`, `phar`, `session`, `tokenizer`, `xml` y `xmlwriter`. Para la suite de pruebas, habilitar además `pdo_sqlite` y `gd` con soporte de JPEG, PNG y WebP. |
 | Interfaz   | Blade + Bootstrap 5.3 por CDN + CSS propio (`public/css/estilos.css`), **sin Vite ni npm** |
 | Acceso a datos | Eloquent ORM |
 
@@ -69,6 +68,7 @@ Sistema web para que las empresas publiquen **ofertas de empleo y pasantías** y
 
    ```bash
    composer install
+   composer check-platform-reqs --lock
    ```
 
 3. Crear el archivo `.env` a partir del ejemplo.
@@ -112,7 +112,7 @@ Sistema web para que las empresas publiquen **ofertas de empleo y pasantías** y
 6. Crear las tablas y cargar los datos de prueba:
 
    ```bash
-   php artisan migrate:fresh --seed
+   php artisan migrate --seed
    ```
 
 7. Crear el enlace simbólico para los archivos públicos:
@@ -127,7 +127,24 @@ Sistema web para que las empresas publiquen **ofertas de empleo y pasantías** y
    php artisan serve
    ```
 
-   Abrir <http://127.0.0.1:8000> en el navegador.
+   Abrir <http://localhost:8000> en el navegador.
+
+### Ensayo para la defensa
+
+Crea una segunda base de datos vacía en el servidor local y apunta `DB_DATABASE` en `.env` a esa base desechable.
+
+```sql
+CREATE DATABASE bolsa_empleo_demo CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+```bash
+php artisan config:clear
+php artisan migrate:fresh --seed
+php artisan route:list --except-vendor
+php artisan test
+```
+
+`migrate:fresh --seed` elimina todas las tablas de la conexión configurada y vuelve a cargar los datos ficticios. Verifica `DB_DATABASE=bolsa_empleo_demo` antes de ejecutarlo y reserva ese comando para la base desechable. El seeder carga 6 empresas, 20 ofertas y 40 postulaciones. Incluye una oferta que cierra hoy, ofertas cerradas y una pasantía sin postulaciones. Para demostrar la validación de duplicados, usa `ana.demo@example.com` en «Desarrollador Laravel Senior». La suite automatizada usa SQLite en memoria.
 
 ---
 
@@ -189,16 +206,17 @@ erDiagram
 
 ## Reglas de negocio (Fase 2)
 
-- El salario mínimo debe ser menor o igual al salario máximo (ambos son opcionales en pasantías).
-- La fecha de cierre debe ser posterior a la fecha de publicación.
-- El número de vacantes debe ser mayor que 0.
-- Un mismo correo no puede postularse dos veces a la misma oferta.
-- No se aceptan postulaciones en ofertas cerradas.
-- El enlace del CV debe tener formato de URL válida.
+| Regla | Archivo y método |
+|-------|------------------|
+| Ambos salarios son obligatorios en empleos y opcionales en pasantías. Si se informan ambos, el mínimo debe ser menor o igual al máximo. El cierre debe ser posterior a la publicación y se requieren entre 1 y 65 535 vacantes. | [`StoreOfertaRequest::rules()`](app/Http/Requests/StoreOfertaRequest.php), heredado por [`UpdateOfertaRequest`](app/Http/Requests/UpdateOfertaRequest.php). |
+| La imagen es opcional. Se admiten JPG, PNG y WebP de hasta 2 MB y se verifica el tipo por contenido. La imagen se guarda en el disco público. | [`StoreOfertaRequest::rules()`](app/Http/Requests/StoreOfertaRequest.php) y [`OfertaController::guardarImagen()`, `update()` y `destroy()`](app/Http/Controllers/OfertaController.php). |
+| El correo se normaliza y solo puede aparecer una vez por oferta. El CV debe usar una URL HTTP o HTTPS. | [`StorePostulacionRequest::prepareForValidation()` y `reglasCandidato()`](app/Http/Requests/StorePostulacionRequest.php), [`UpdatePostulacionRequest::rules()`](app/Http/Requests/UpdatePostulacionRequest.php) y [migración de postulaciones, `up()`](database/migrations/2026_11_04_193621_create_postulaciones_table.php). |
+| Una oferta acepta nuevas postulaciones hasta su fecha de cierre inclusive. Las postulaciones históricas se pueden editar. | [`Oferta::scopeActivas()` y `estaActiva()`](app/Models/Oferta.php), [`StorePostulacionRequest::rules()`](app/Http/Requests/StorePostulacionRequest.php) y [`PostulacionController::store()` y `update()`](app/Http/Controllers/PostulacionController.php). |
+| El nombre y el correo de contacto de la empresa son únicos. Una empresa con ofertas queda protegida contra eliminación y al eliminar una oferta se eliminan sus postulaciones. | [`StoreEmpresaRequest::rules()`](app/Http/Requests/StoreEmpresaRequest.php), [`UpdateEmpresaRequest::rules()`](app/Http/Requests/UpdateEmpresaRequest.php), [`EmpresaController::destroy()`](app/Http/Controllers/EmpresaController.php) y migraciones de [ofertas](database/migrations/2026_11_04_193606_create_ofertas_table.php) y [postulaciones](database/migrations/2026_11_04_193621_create_postulaciones_table.php), método `up()`. |
 
 ### Reporte del caso 7
 
-El reporte está disponible en `/reporte` (`reporte.index`). Una oferta se considera activa si su
+El reporte está disponible en `/reporte` (`reporte.index`) y se calcula en [`ReporteController::index()`](app/Http/Controllers/ReporteController.php). Una oferta se considera activa si su
 fecha de cierre es hoy o posterior.
 
 - **Ofertas activas por modalidad.** Muestra todas las modalidades, incluidas las que tienen cero ofertas activas.
@@ -209,47 +227,102 @@ fecha de cierre es hoy o posterior.
 
 ## Capturas de pantalla
 
-<img width="1678" height="897" alt="image" src="https://github.com/user-attachments/assets/fae9d700-94dd-499e-adf3-5d676d8306c3" />
+Las capturas muestran la Fase 2 integrada con datos ficticios en una base desechable. El panel muestra 20 ofertas, 16 activas, 4 cerradas, 6 empresas y 40 postulaciones. Las modalidades activas del reporte suman 16 (5 presenciales, 4 remotas y 7 híbridas).
 
-<img width="1897" height="917" alt="image" src="https://github.com/user-attachments/assets/09c7a167-1b90-4b07-9d13-f37517bd8fb7" />
-<img width="1662" height="912" alt="image" src="https://github.com/user-attachments/assets/8252e40c-7961-4aee-a1c8-483d9451cac5" />
+![Panel con indicadores y accesos a los cuatro módulos](docs/capturas/panel.jpg)
 
+![Reporte con ofertas activas por modalidad, postulaciones por oferta y ranking por vacantes activas](docs/capturas/reporte.jpg)
+
+<details>
+<summary>Reporte con cero postulaciones y panel móvil</summary>
+
+![Segunda página del reporte con cero postulaciones para Diseño UX/UI](docs/capturas/reporte-cero.jpg)
+
+![Panel móvil con navegación plegable](docs/capturas/panel-movil.jpg)
+
+</details>
+
+<details>
+<summary>Ofertas · listado filtrado, ficha, alta, edición y confirmación</summary>
+
+![Búsqueda de Pasantía en Desarrollo Web con los filtros Remota y Pasantía](docs/capturas/ofertas-filtradas.jpg)
+
+![Ficha de Desarrollador Laravel Senior con la imagen predeterminada, la empresa y sus siete postulaciones](docs/capturas/oferta-ficha.jpg)
+
+![Formulario de publicación de una oferta](docs/capturas/oferta-alta.jpg)
+
+![Formulario de edición con los datos de la oferta](docs/capturas/oferta-edicion.jpg)
+
+![Modal de confirmación con la advertencia de eliminación en cascada](docs/capturas/oferta-confirmacion.jpg)
+
+</details>
+
+<details>
+<summary>Empresas · catálogo, ficha y edición</summary>
+
+![Catálogo de las seis empresas ficticias](docs/capturas/empresas.jpg)
+
+![Ficha de TecnoSoluciones Cuscatlán con sus ofertas](docs/capturas/empresa-ficha.jpg)
+
+![Formulario de edición de los datos de una empresa](docs/capturas/empresa-edicion.jpg)
+
+</details>
+
+<details>
+<summary>Postulaciones · listado, ficha, alta y edición</summary>
+
+![Listado de postulaciones con filtros y estados](docs/capturas/postulaciones.jpg)
+
+![Ficha de Ana Demo con la oferta y el estado de su postulación](docs/capturas/postulacion-ficha.jpg)
+
+![Formulario para registrar una postulación en una oferta activa](docs/capturas/postulacion-alta.jpg)
+
+![Edición de los datos y el estado de una postulación](docs/capturas/postulacion-edicion.jpg)
+
+</details>
+
+<details>
+<summary>Validación del servidor y recuperación de la entrada anterior</summary>
+
+Los formularios llevan `novalidate`. Las imágenes muestran los errores devueltos por Laravel tras enviar los datos inválidos y los campos repoblados con `old()`.
+
+![Alta de oferta con cero vacantes y cierre igual a la publicación, con título y descripción conservados](docs/capturas/oferta-alta-errores.jpg)
+
+![Edición de oferta con salario máximo inferior al mínimo y el título modificado conservado](docs/capturas/oferta-edicion-errores.jpg)
+
+![Alta de empresa con correo y teléfono inválidos y nombre conservado](docs/capturas/empresa-alta-errores.jpg)
+
+![Alta de postulación con correo duplicado y URL de CV inválida, con los datos de Ana Demo conservados](docs/capturas/postulacion-alta-errores.jpg)
+
+</details>
 
 ---
 
-## Distribución del trabajo
+## Aportes por integrante
 
-| Integrante | Tareas realizadas |
-|------------|-------------------|
-| Gustavo    | Creación del proyecto, configuración de MySQL/`.env.example`, README, `PanelController` y panel de inicio, integración de PR y etiqueta `v1.0`. |
-| Jimmy      | Migraciones de `empresas`, `ofertas` y `postulaciones` con llaves foráneas y restricciones; diagrama entidad-relación. |
-| Andrés     | Modelos Eloquent `Empresa`, `Oferta` y `Postulacion` (fillable, casts, relaciones, scope y accessor); `OfertaController` (index, show) y rutas resource. |
-| Bryan      | `EmpresaSeeder`, `OfertaFactory`, `PostulacionFactory` y `DatabaseSeeder` (datos de prueba). |
-| Kevin      | Layout Blade con Bootstrap, `estilos.css`, imagen por defecto, vistas de listado paginado y ficha de detalle. |
+| Integrante | Fase 1 | Fase 2 |
+|------------|--------|--------|
+| Gustavo | Proyecto, MySQL, README, panel inicial, integración y etiqueta `v1.0`. | Panel, reporte, pruebas de agregados y navegación, README y evidencia. |
+| Jimmy | Migraciones, restricciones y diagrama entidad-relación. | CRUD de empresas, Form Requests y pruebas de integridad del catálogo. |
+| Josué / Andrés Galán | Modelos Eloquent, relaciones, controlador y rutas de ofertas. | CRUD y filtros de ofertas, reglas de validación, Storage y pruebas de escritura. |
+| Bryan | Seeders y factories de los datos de prueba. | CRUD y filtros de postulaciones, reglas de candidato, pruebas y datos de demostración. |
+| Kevin | Layout Bootstrap, CSS, imagen predeterminada, listado y ficha de ofertas. | Formularios reutilizables, diseño móvil, filtros visibles, ficha con postulaciones y navegación entre módulos. |
 
 ---
 
-## Estado de la Fase 1
-
-- [x] Base de datos creada con migraciones (`empresas`, `ofertas`, `postulaciones`) con llaves foráneas y restricciones.
-- [x] Modelos Eloquent con relaciones, `fillable`, casts, scope `activas()` y accessors (`imagen_url`, `rango_salarial`).
-- [x] Datos de prueba con seeders y factories (6 empresas, 21 ofertas, 56 postulaciones).
-- [x] Listado paginado de ofertas (`/ofertas`).
-- [x] Ficha de detalle de cada oferta con su empresa y postulaciones (`/ofertas/{oferta}`).
-- [x] Panel de inicio con indicadores básicos (`/`).
-- [x] Interfaz con layout Blade, Bootstrap 5.3 por CDN y CSS propio.
-- [x] Trabajo integrado en `main` mediante pull requests y etiqueta `v1.0`.
-
-### Etiquetas de conceptos en el código
+## Etiquetas de conceptos en el código
 
 | Etiqueta | Archivos donde aparece |
 |----------|------------------------|
 | `[MIGRACION]` | `database/migrations/*_create_empresas_table.php`, `*_create_ofertas_table.php`, `*_create_postulaciones_table.php` |
 | `[RELACION]` | `app/Models/Empresa.php`, `app/Models/Oferta.php`, `app/Models/Postulacion.php`, `database/migrations/*_create_ofertas_table.php`, `*_create_postulaciones_table.php` |
 | `[ENCAPSULAMIENTO]` | `app/Models/Empresa.php`, `app/Models/Oferta.php`, `app/Models/Postulacion.php` |
-| `[CRUD-READ]` | `app/Http/Controllers/OfertaController.php`, `app/Http/Controllers/PanelController.php`, `resources/views/ofertas/index.blade.php`, `resources/views/ofertas/show.blade.php`, `resources/views/panel/index.blade.php` |
-| `[INYECCION-DEPENDENCIAS]` | `app/Http/Controllers/OfertaController.php` |
-| `[SEEDER]` | `database/seeders/EmpresaSeeder.php` |
+| `[CRUD-CREATE]`, `[CRUD-READ]`, `[CRUD-UPDATE]`, `[CRUD-DELETE]` | `app/Http/Controllers/{Oferta,Empresa,Postulacion}Controller.php` y sus vistas en `resources/views/`. También aparece `[CRUD-READ]` en `PanelController.php` y `panel/index.blade.php`. |
+| `[INYECCION-DEPENDENCIAS]` | `app/Http/Controllers/{Oferta,Empresa,Postulacion}Controller.php`, junto a la inyección de Form Requests y el enlace de modelos a rutas. |
+| `[SEEDER]` | `database/seeders/EmpresaSeeder.php` y `database/seeders/DemostracionSeeder.php`. |
+| `[VALIDACION]`, `[REGLA-NEGOCIO]` | `app/Http/Requests/`, `app/Http/Controllers/PostulacionController.php` y los parciales `_form.blade.php` de cada módulo. |
+| `[SEGURIDAD]` | `app/Http/Controllers/{Oferta,Postulacion}Controller.php`, `app/Http/Requests/StoreOfertaRequest.php`, `app/Http/Requests/StorePostulacionRequest.php`, `app/Models/Postulacion.php` y vistas de los módulos con CSRF, DELETE y enlaces de CV. |
+| `[ACCESIBILIDAD]` | `resources/views/layouts/app.blade.php` y `resources/views/partials/modal-confirmar-eliminar.blade.php`. |
 
 ---
 
@@ -260,4 +333,4 @@ fecha de cierre es hoy o posterior.
 - **Pull requests:** los cambios llegan a `main` solo mediante pull request revisado por otro integrante.
 - **Commits:** se usa [Conventional Commits](https://www.conventionalcommits.org/es/) en español y sin tildes
   (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`...). Ejemplo: `feat(ofertas): agrega listado paginado`.
-- **Etiquetas:** `v1.0` al cerrar la Fase 1 y `v2.0` al cerrar la Fase 2.
+- **Etiquetas de entrega.** La Fase 1 está en [`v1.0`](../../releases/tag/v1.0). La etiqueta `v2.0` corresponde al cierre de la Fase 2. Se consultan en [Tags de GitHub](../../tags) o con `git tag --list`.

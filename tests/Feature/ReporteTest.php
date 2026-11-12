@@ -3,10 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\Postulacion;
+use Dom\HTMLDocument;
+use Dom\XPath;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\Feature\Ofertas\CreaDatosDeOfertas;
 use Tests\TestCase;
+
+use const Dom\HTML_NO_DEFAULT_NS;
 
 class ReporteTest extends TestCase
 {
@@ -28,7 +32,11 @@ class ReporteTest extends TestCase
         ]);
         DB::table('ofertas')->where('id', $cierraHoy->id)->update(['fecha_cierre' => today()->toDateString()]);
 
-        $sinPostulaciones = $this->crearOferta($lider, ['modalidad' => 'presencial', 'vacantes' => 3]);
+        $sinPostulaciones = $this->crearOferta($lider, [
+            'titulo' => 'Oferta sin postulaciones',
+            'modalidad' => 'presencial',
+            'vacantes' => 3,
+        ]);
         $this->crearOferta($zeta, ['modalidad' => 'remota', 'vacantes' => 5]);
         $this->crearOferta($alfa, ['modalidad' => 'remota', 'vacantes' => 5]);
         $this->crearOferta($zeta, [
@@ -60,7 +68,6 @@ class ReporteTest extends TestCase
         $this->assertSame(2, $modalidades['presencial']);
         $this->assertSame(2, $modalidades['remota']);
         $this->assertFalse($modalidades->has('hibrida'));
-        $respuesta->assertSeeTextInOrder(['Híbrida', '0']);
 
         $conteos = $respuesta->viewData('ofertas')->pluck('postulaciones_count', 'id');
         $this->assertCount(6, $conteos);
@@ -71,6 +78,29 @@ class ReporteTest extends TestCase
         $ranking = $respuesta->viewData('ranking');
         $this->assertSame([$lider->id, $alfa->id, $zeta->id], $ranking->pluck('id')->all());
         $this->assertSame([7, 5, 5], $ranking->pluck('vacantes_activas')->all());
+
+        $pantalla = new XPath(HTMLDocument::createFromString($respuesta->getContent(), LIBXML_NOERROR | HTML_NO_DEFAULT_NS));
+
+        foreach (['Presencial' => 2, 'Remota' => 2, 'Híbrida' => 0] as $modalidad => $total) {
+            $this->assertSame((string) $total, $pantalla->evaluate(
+                "normalize-space(//section[@aria-labelledby='titulo-modalidades']//dl[dt='$modalidad']/dd)"
+            ));
+        }
+
+        foreach ([[$cierraHoy, 2], [$cerrada, 1], [$sinPostulaciones, 0]] as [$oferta, $total]) {
+            $enlace = route('ofertas.show', $oferta);
+            $this->assertSame((string) $total, $pantalla->evaluate(
+                "normalize-space(//table[@aria-labelledby='titulo-postulaciones']//tr[th/a/@href='$enlace']/td)"
+            ));
+        }
+
+        $filasRanking = $pantalla->query("//table[@aria-labelledby='titulo-ranking']/tbody/tr");
+        $this->assertCount(3, $filasRanking);
+
+        foreach ([['Líder', '7'], ['Alfa', '5'], ['Zeta', '5']] as $indice => [$empresa, $vacantes]) {
+            $this->assertSame($empresa, $pantalla->evaluate('normalize-space(th/a)', $filasRanking[$indice]));
+            $this->assertSame($vacantes, $pantalla->evaluate('normalize-space(td[last()])', $filasRanking[$indice]));
+        }
     }
 
     public function test_muestra_estados_vacios_y_las_tres_modalidades_en_cero(): void
