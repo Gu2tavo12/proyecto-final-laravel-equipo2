@@ -2,14 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreOfertaRequest;
+use App\Models\Empresa;
 use App\Models\Oferta;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Throwable;
 
 /**
- * Consulta de ofertas (Fase 1): listado paginado y ficha.
- * create, store, edit, update y destroy se implementan en la Fase 2.
+ * CRUD de ofertas: listado con filtros, ficha, registro, edicion y eliminacion.
+ * Las imagenes se guardan en el disco "public" bajo ofertas/.
  */
 class OfertaController extends Controller
 {
@@ -17,6 +24,11 @@ class OfertaController extends Controller
      * Longitud maxima del texto de busqueda.
      */
     private const BUSQUEDA_MAX = 100;
+
+    /**
+     * Carpeta del disco "public" donde la app guarda las imagenes de ofertas.
+     */
+    private const CARPETA_IMAGENES = 'ofertas';
 
     /**
      * Listado paginado de ofertas, las mas recientes primero, con busqueda
@@ -47,6 +59,67 @@ class OfertaController extends Controller
             ->withQueryString();
 
         return view('ofertas.index', compact('ofertas', 'filtros'));
+    }
+
+    /**
+     * Formulario de registro.
+     *
+     * [CRUD-CREATE] Si el catalogo de empresas esta vacio no se puede publicar
+     * una oferta, asi que se envia al registro de empresas.
+     */
+    public function create(): View|RedirectResponse
+    {
+        $empresas = $this->empresas();
+
+        if ($empresas->isEmpty()) {
+            return redirect()
+                ->route('empresas.create')
+                ->with('error', 'Registra una empresa antes de publicar ofertas.');
+        }
+
+        return view('ofertas.create', compact('empresas'));
+    }
+
+    /**
+     * Guarda una oferta nueva con su imagen opcional.
+     *
+     * [CRUD-CREATE]
+     * [INYECCION-DEPENDENCIAS] Laravel inyecta StoreOfertaRequest y lo valida antes
+     * de ejecutar el metodo; si falla, regresa al formulario con errores y old().
+     */
+    public function store(StoreOfertaRequest $request): RedirectResponse
+    {
+        // [SEGURIDAD] Solo datos validados; la ruta de la imagen la genera la app.
+        $datos = $request->safe()->except('imagen');
+        $datos['imagen'] = null;
+
+        if ($request->hasFile('imagen')) {
+            $ruta = $this->guardarImagen($request->file('imagen'));
+
+            if ($ruta === null) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['imagen' => 'No se pudo guardar la imagen. Intenta de nuevo.']);
+            }
+
+            $datos['imagen'] = $ruta;
+        }
+
+        try {
+            $oferta = Oferta::create($datos);
+        } catch (Throwable $e) {
+            // Si la BD falla, se borra el archivo recien subido para no dejar huerfanos.
+            $this->eliminarImagen($datos['imagen']);
+            report($e);
+
+            return back()
+                ->withInput()
+                ->with('error', 'No se pudo registrar la oferta. Intenta de nuevo.');
+        }
+
+        return redirect()
+            ->route('ofertas.show', $oferta)
+            ->with('exito', 'Oferta registrada correctamente.');
     }
 
     /**
@@ -83,5 +156,52 @@ class OfertaController extends Controller
             'modalidad' => is_string($modalidad) && array_key_exists($modalidad, Oferta::MODALIDADES) ? $modalidad : '',
             'tipo' => is_string($tipo) && array_key_exists($tipo, Oferta::TIPOS) ? $tipo : '',
         ];
+    }
+
+    /**
+     * Empresas para el selector del formulario, ordenadas por nombre.
+     *
+     * @return Collection<int, Empresa>
+     */
+    private function empresas(): Collection
+    {
+        return Empresa::orderBy('nombre')->get();
+    }
+
+    /**
+     * Guarda la imagen en storage/app/public/ofertas con un nombre aleatorio.
+     * Devuelve la ruta relativa o null si no se pudo escribir.
+     */
+    private function guardarImagen(UploadedFile $imagen): ?string
+    {
+        $ruta = $imagen->store(self::CARPETA_IMAGENES, 'public');
+
+        return is_string($ruta) && $ruta !== '' ? $ruta : null;
+    }
+
+    /**
+     * Borra una imagen del disco "public".
+     *
+     * [SEGURIDAD] Solo borra archivos dentro de ofertas/ (los que gestiona la app);
+     * ignora rutas vacias, absolutas o con "..".
+     */
+    private function eliminarImagen(?string $ruta): void
+    {
+        if (! $this->esImagenGestionada($ruta)) {
+            return;
+        }
+
+        Storage::disk('public')->delete($ruta);
+    }
+
+    /**
+     * Indica si la ruta apunta a un archivo de ofertas/ guardado por la app.
+     */
+    private function esImagenGestionada(?string $ruta): bool
+    {
+        return is_string($ruta)
+            && str_starts_with($ruta, self::CARPETA_IMAGENES.'/')
+            && ! str_contains($ruta, '..')
+            && ! str_contains($ruta, '\\');
     }
 }
