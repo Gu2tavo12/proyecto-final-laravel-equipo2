@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PanelController::class, 'index'])->name('panel');
 Route::get('/reporte', [ReporteController::class, 'index'])->name('reporte.index');
+Route::get('/reporte/pdf', [ReporteController::class, 'pdf'])->name('reporte.pdf');
 
 // Ofertas: CRUD completo (index, create, store, show, edit, update, destroy).
 // [SEGURIDAD] destroy solo responde a DELETE (con @csrf y @method('DELETE')).

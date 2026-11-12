@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use const Dom\HTML_NO_DEFAULT_NS;
+
 use App\Models\Postulacion;
 use Dom\HTMLDocument;
 use Dom\XPath;
@@ -9,8 +11,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\Feature\Ofertas\CreaDatosDeOfertas;
 use Tests\TestCase;
-
-use const Dom\HTML_NO_DEFAULT_NS;
 
 class ReporteTest extends TestCase
 {
@@ -58,6 +58,7 @@ class ReporteTest extends TestCase
 
         $respuesta = $this->get(route('reporte.index'))
             ->assertOk()
+            ->assertSee(route('reporte.pdf'))
             ->assertSee('Suma de vacantes de las ofertas activas.')
             ->assertSee(route('ofertas.show', $sinPostulaciones))
             ->assertSee(route('ofertas.show', $cerrada))
@@ -101,6 +102,20 @@ class ReporteTest extends TestCase
             $this->assertSame($empresa, $pantalla->evaluate('normalize-space(th/a)', $filasRanking[$indice]));
             $this->assertSame($vacantes, $pantalla->evaluate('normalize-space(td[last()])', $filasRanking[$indice]));
         }
+
+        $pdf = $this->get(route('reporte.pdf'))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertDownload('reporte-caso-7.pdf')
+            ->streamedContent();
+
+        $this->assertStringStartsWith('%PDF-', $pdf);
+        $this->assertStringContainsString('(H'.chr(237).'brida) Tj', $pdf);
+        $this->assertStringContainsString('(Oferta cerrada | Inactiva) Tj', $pdf);
+        $this->assertStringContainsString('(1. L'.chr(237).'der) Tj', $pdf);
+        $this->assertStringContainsString('(2. Alfa) Tj', $pdf);
+        $this->assertStringContainsString('(3. Zeta) Tj', $pdf);
+        $this->assertStringNotContainsString('(4. Inactiva) Tj', $pdf);
     }
 
     public function test_muestra_estados_vacios_y_las_tres_modalidades_en_cero(): void
@@ -111,5 +126,27 @@ class ReporteTest extends TestCase
             ->assertSee('No hay ofertas activas.')
             ->assertSee('No hay ofertas registradas.')
             ->assertSee('No hay empresas con ofertas activas.');
+
+        $pdf = $this->get(route('reporte.pdf'))->assertOk()->streamedContent();
+
+        $this->assertStringContainsString('(No hay ofertas registradas.) Tj', $pdf);
+        $this->assertStringContainsString('(No hay empresas con ofertas activas.) Tj', $pdf);
+    }
+
+    public function test_exporta_todas_las_ofertas_aunque_el_reporte_web_este_paginado(): void
+    {
+        $empresa = $this->crearEmpresa();
+
+        for ($numero = 1; $numero <= 50; $numero++) {
+            $this->crearOferta($empresa, ['titulo' => "Oferta para exportar ($numero)"]);
+        }
+
+        $pdf = $this->get(route('reporte.pdf', ['pagina_ofertas' => 2]))
+            ->assertOk()
+            ->streamedContent();
+
+        $this->assertSame(50, substr_count($pdf, 'Oferta para exportar'));
+        $this->assertStringContainsString('Oferta para exportar \\(50\\)', $pdf);
+        $this->assertGreaterThan(1, substr_count($pdf, '/Type /Page '));
     }
 }

@@ -3,7 +3,12 @@
 @section('titulo', 'Reporte')
 
 @section('contenido')
-    <h1 class="h3 mb-4">Reporte de empleo y pasantías</h1>
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+        <h1 class="h3 mb-0">Reporte de empleo y pasantías</h1>
+        <a href="{{ route('reporte.pdf') }}" class="btn btn-outline-primary">
+            <i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>Descargar PDF
+        </a>
+    </div>
 
     <section class="mb-4" aria-labelledby="titulo-modalidades">
         <h2 id="titulo-modalidades" class="h5">Ofertas activas por modalidad</h2>
