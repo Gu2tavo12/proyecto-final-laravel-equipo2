@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreOfertaRequest;
+use App\Http\Requests\UpdateOfertaRequest;
 use App\Models\Empresa;
 use App\Models\Oferta;
 use Illuminate\Database\Eloquent\Builder;
@@ -137,6 +138,66 @@ class OfertaController extends Controller
         ]);
 
         return view('ofertas.show', compact('oferta'));
+    }
+
+    /**
+     * Formulario de edicion.
+     *
+     * [CRUD-UPDATE]
+     * [INYECCION-DEPENDENCIAS] Route model binding: 404 si la oferta no existe.
+     */
+    public function edit(Oferta $oferta): View
+    {
+        $empresas = $this->empresas();
+
+        return view('ofertas.edit', compact('oferta', 'empresas'));
+    }
+
+    /**
+     * Actualiza la oferta y, si se adjunta, reemplaza su imagen.
+     *
+     * [CRUD-UPDATE] Orden seguro: 1) guardar la imagen nueva, 2) actualizar la BD,
+     * 3) recien entonces borrar la anterior. Si la BD falla se borra la nueva y
+     * la oferta conserva su foto vigente.
+     * [INYECCION-DEPENDENCIAS] UpdateOfertaRequest (validacion) y Oferta (binding).
+     */
+    public function update(UpdateOfertaRequest $request, Oferta $oferta): RedirectResponse
+    {
+        // [SEGURIDAD] Solo datos validados; sin imagen nueva no se toca la columna.
+        $datos = $request->safe()->except('imagen');
+        $imagenAnterior = $oferta->imagen;
+        $imagenNueva = null;
+
+        if ($request->hasFile('imagen')) {
+            $imagenNueva = $this->guardarImagen($request->file('imagen'));
+
+            if ($imagenNueva === null) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['imagen' => 'No se pudo guardar la imagen. Intenta de nuevo.']);
+            }
+
+            $datos['imagen'] = $imagenNueva;
+        }
+
+        try {
+            $oferta->update($datos);
+        } catch (Throwable $e) {
+            $this->eliminarImagen($imagenNueva);
+            report($e);
+
+            return back()
+                ->withInput()
+                ->with('error', 'No se pudo actualizar la oferta. Intenta de nuevo.');
+        }
+
+        if ($imagenNueva !== null && $imagenAnterior !== $imagenNueva) {
+            $this->eliminarImagen($imagenAnterior);
+        }
+
+        return redirect()
+            ->route('ofertas.show', $oferta)
+            ->with('exito', 'Oferta actualizada correctamente.');
     }
 
     /**
