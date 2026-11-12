@@ -44,7 +44,24 @@ class PostulacionFactory extends Factory
                 ? 'https://drive.google.com/file/d/'.Str::random(28).'/view'
                 : 'https://github.com/'.Str::slug(fake()->userName()),
             'fecha_postulacion' => today()->subDays(fake()->numberBetween(0, 30)),
-            'estado' => fake()->randomElement(['recibida', 'en_revision', 'aceptada', 'rechazada']),
+            'estado' => fake()->randomElement(array_keys(Postulacion::ESTADOS)),
         ];
+    }
+
+    /**
+     * Estado: postulacion de la oferta indicada con una fecha coherente,
+     * entre la publicacion y el cierre (o hoy, si la oferta sigue abierta).
+     */
+    public function paraOferta(Oferta $oferta): static
+    {
+        return $this->state(function () use ($oferta) {
+            $desde = $oferta->fecha_publicacion;
+            $hasta = $oferta->fecha_cierre->lt(today()) ? $oferta->fecha_cierre : today();
+
+            return [
+                'oferta_id' => $oferta->id,
+                'fecha_postulacion' => fake()->dateTimeBetween($desde, $hasta)->format('Y-m-d'),
+            ];
+        });
     }
 }

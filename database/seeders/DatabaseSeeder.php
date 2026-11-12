@@ -17,6 +17,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Semilla fija: cada migrate:fresh --seed genera los mismos nombres y correos.
+        fake()->seed(20261111);
+
         // User::factory(10)->create();
 
         User::factory()->create([
@@ -27,25 +30,23 @@ class DatabaseSeeder extends Seeder
         // Catalogo de empresas: debe ir antes que las ofertas
         $this->call(EmpresaSeeder::class);
 
-        // 21 ofertas (>= 15) reciclando las empresas existentes
-        Oferta::factory()->count(14)->create();
-        Oferta::factory()->count(4)->pasantia()->create();
-        Oferta::factory()->count(3)->cerrada()->create();
+        // 8 ofertas fijas para la demostracion (7+6+5+4+3+2+1+0 = 28 postulaciones)
+        $this->call(DemostracionSeeder::class);
 
-        // Entre 0 y 5 postulaciones por oferta
-        foreach (Oferta::all() as $oferta) {
-            // fecha_postulacion entre la publicacion y el cierre de la oferta
-            // (y nunca en el futuro, si la oferta sigue abierta)
-            $desde = $oferta->fecha_publicacion;
-            $hasta = $oferta->fecha_cierre->lt(today()) ? $oferta->fecha_cierre : today();
+        // 12 ofertas complementarias (20 en total, >= 15) reciclando las empresas
+        $complementarias = Oferta::factory()->count(8)->create()
+            ->concat(Oferta::factory()->count(2)->pasantia()->create())
+            ->concat(Oferta::factory()->count(2)->cerrada()->create());
 
+        // Exactamente 1 postulacion por oferta complementaria, con estados rotativos:
+        // asi el ranking del reporte no cambia entre ejecuciones (40 postulaciones,
+        // 10 por estado) y las fechas quedan entre la publicacion y el cierre.
+        $estados = array_keys(Postulacion::ESTADOS);
+
+        foreach ($complementarias->values() as $i => $oferta) {
             Postulacion::factory()
-                ->count(fake()->numberBetween(0, 5))
-                ->state(fn () => [
-                    'oferta_id' => $oferta->id,
-                    'fecha_postulacion' => fake()->dateTimeBetween($desde, $hasta)->format('Y-m-d'),
-                ])
-                ->create();
+                ->paraOferta($oferta)
+                ->create(['estado' => $estados[$i % count($estados)]]);
         }
     }
 }
