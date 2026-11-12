@@ -29,7 +29,7 @@
             <div class="collapse navbar-collapse" id="navbarContenido">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('/') ? 'active' : '' }}" @if (request()->is('/')) aria-current="page" @endif href="{{ route('panel') }}">
+                        <a class="nav-link {{ request()->routeIs('panel') || request()->is('/') ? 'active' : '' }}" @if (request()->routeIs('panel') || request()->is('/')) aria-current="page" @endif href="{{ route('panel') }}">
                             <i class="bi bi-house-door me-1" aria-hidden="true"></i>Inicio
                         </a>
                     </li>
@@ -39,17 +39,17 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('empresas.*') ? 'active' : '' }}" @if (request()->routeIs('empresas.*')) aria-current="page" @endif href="{{ route('empresas.index') }}">
+                        <a class="nav-link {{ request()->routeIs('empresas.*') || request()->is('empresas*') ? 'active' : '' }}" @if (request()->routeIs('empresas.*') || request()->is('empresas*')) aria-current="page" @endif href="{{ route('empresas.index') }}">
                             <i class="bi bi-building me-1" aria-hidden="true"></i>Empresas
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('postulaciones.*') ? 'active' : '' }}" @if (request()->routeIs('postulaciones.*')) aria-current="page" @endif href="{{ route('postulaciones.index') }}">
+                        <a class="nav-link {{ request()->routeIs('postulaciones.*') || request()->is('postulaciones*') ? 'active' : '' }}" @if (request()->routeIs('postulaciones.*') || request()->is('postulaciones*')) aria-current="page" @endif href="{{ route('postulaciones.index') }}">
                             <i class="bi bi-people me-1" aria-hidden="true"></i>Postulaciones
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('reporte.index') ? 'active' : '' }}" @if (request()->routeIs('reporte.index')) aria-current="page" @endif href="{{ route('reporte.index') }}">
+                        <a class="nav-link {{ request()->routeIs('reporte.*') || request()->is('reporte*') ? 'active' : '' }}" @if (request()->routeIs('reporte.*') || request()->is('reporte*')) aria-current="page" @endif href="{{ route('reporte.index') }}">
                             <i class="bi bi-bar-chart me-1" aria-hidden="true"></i>Reporte
                         </a>
                     </li>

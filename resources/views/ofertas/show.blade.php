@@ -1,13 +1,38 @@
-{{-- [CRUD-READ] ficha de detalle --}}
+{{-- [CRUD-READ] ficha de detalle de oferta con empresa y postulaciones asociadas --}}
+{{-- [CRUD-DELETE] eliminacion con confirmacion modal accesible, @csrf y @method('DELETE') --}}
+{{-- [SEGURIDAD] validacion de esquema http/https para enlaces externos de CV y escape estricto con {{ }} --}}
 @extends('layouts.app')
 
 @section('titulo', $oferta->titulo)
 
 @section('contenido')
-    <div class="mb-3">
+    {{-- Barra superior de acciones --}}
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
         <a href="{{ route('ofertas.index') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i>Volver al listado
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver al listado
         </a>
+        <div class="d-flex flex-wrap gap-2">
+            @if ($oferta->estaActiva())
+                <a href="{{ route('postulaciones.create', ['oferta_id' => $oferta->id]) }}" class="btn btn-success btn-sm">
+                    <i class="bi bi-person-plus me-1" aria-hidden="true"></i>Postularse a esta oferta
+                </a>
+            @endif
+            <a href="{{ route('ofertas.edit', $oferta) }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar
+            </a>
+            <form id="form-eliminar-ficha-{{ $oferta->id }}" action="{{ route('ofertas.destroy', $oferta) }}" method="POST" class="d-inline">
+                @csrf
+                @method('DELETE')
+                <button type="button" class="btn btn-outline-danger btn-sm"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalConfirmarEliminar"
+                        data-form-id="form-eliminar-ficha-{{ $oferta->id }}"
+                        data-mensaje="¿Está seguro de que desea eliminar la oferta «{{ $oferta->titulo }}»? Esta acción eliminará permanentemente la vacante y todas las postulaciones recibidas."
+                        title="Eliminar oferta">
+                    <i class="bi bi-trash me-1" aria-hidden="true"></i>Eliminar
+                </button>
+            </form>
+        </div>
     </div>
 
     <div class="row g-4">
@@ -17,7 +42,7 @@
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-body p-4">
                     <div class="text-center mb-4">
-                        <img src="{{ $oferta->imagen_url }}" alt="{{ $oferta->titulo }}" class="imagen-oferta rounded">
+                        <img src="{{ $oferta->imagen_url }}" alt="{{ $oferta->titulo }}" class="imagen-oferta rounded shadow-sm">
                     </div>
 
                     <div class="d-flex flex-wrap gap-2 mb-3">
@@ -36,13 +61,41 @@
                         </span>
 
                         @if ($oferta->estaActiva())
-                            <span class="badge bg-success">Activa</span>
+                            <span class="badge bg-success">
+                                <i class="bi bi-check-circle me-1" aria-hidden="true"></i>Activa
+                            </span>
                         @else
-                            <span class="badge bg-secondary">Cerrada</span>
+                            <span class="badge bg-secondary">
+                                <i class="bi bi-lock me-1" aria-hidden="true"></i>Cerrada
+                            </span>
                         @endif
                     </div>
 
                     <h1 class="h3 fw-bold mb-3">{{ $oferta->titulo }}</h1>
+
+                    {{-- Alerta informativa cuando la oferta está cerrada --}}
+                    @if (! $oferta->estaActiva())
+                        <div class="alert alert-warning d-flex align-items-center mb-3 py-2 px-3 small border" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill fs-5 me-2 text-warning" aria-hidden="true"></i>
+                            <div>
+                                <strong>Convocatoria cerrada:</strong> La fecha límite de recepción de postulaciones fue el
+                                <strong>{{ $oferta->fecha_cierre ? $oferta->fecha_cierre->format('d/m/Y') : 'recientemente' }}</strong>. Esta vacante ya no admite nuevas candidaturas.
+                            </div>
+                        </div>
+                    @else
+                        <div class="alert alert-success d-flex justify-content-between align-items-center mb-3 py-2 px-3 small border" role="alert">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-clock-history fs-5 me-2 text-success" aria-hidden="true"></i>
+                                <div>
+                                    <strong>Convocatoria abierta:</strong> Se reciben postulaciones hasta el
+                                    <strong>{{ $oferta->fecha_cierre ? $oferta->fecha_cierre->format('d/m/Y') : 'fin de mes' }}</strong>.
+                                </div>
+                            </div>
+                            <a href="{{ route('postulaciones.create', ['oferta_id' => $oferta->id]) }}" class="btn btn-sm btn-success text-nowrap ms-2">
+                                <i class="bi bi-send me-1" aria-hidden="true"></i>Postularse
+                            </a>
+                        </div>
+                    @endif
 
                     <div class="row g-3 py-3 border-top border-bottom my-3 bg-light rounded px-2">
                         <div class="col-sm-6 col-md-3">
@@ -70,8 +123,11 @@
 
             {{-- Sección Postulaciones --}}
             <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-white py-3">
-                    <h2 class="h5 fw-bold mb-0">Postulaciones ({{ $oferta->postulaciones->count() }})</h2>
+                <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <h2 class="h5 fw-bold mb-0">Postulaciones recibidas ({{ $oferta->postulaciones->count() }})</h2>
+                    <a href="{{ route('postulaciones.index', ['oferta_id' => $oferta->id]) }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-list-ul me-1" aria-hidden="true"></i>Ver en listado de postulaciones
+                    </a>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -84,42 +140,47 @@
                                     <th scope="col">CV</th>
                                     <th scope="col">Fecha</th>
                                     <th scope="col">Estado</th>
+                                    <th scope="col" class="text-end">Acción</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($oferta->postulaciones as $postulacion)
                                     <tr>
-                                        <td class="fw-semibold">{{ $postulacion->nombre_candidato }}</td>
                                         <td>
-                                            <a href="mailto:{{ $postulacion->correo }}" class="text-decoration-none">
+                                            <a href="{{ route('postulaciones.show', $postulacion) }}" class="fw-semibold text-decoration-none text-dark">
+                                                {{ $postulacion->nombre_candidato }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a href="mailto:{{ $postulacion->correo }}" class="text-decoration-none text-secondary">
                                                 {{ $postulacion->correo }}
                                             </a>
                                         </td>
                                         <td>{{ $postulacion->carrera }}</td>
                                         <td>
-                                            <a href="{{ $postulacion->enlace_cv }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-file-earmark-text me-1"></i>Ver CV
-                                            </a>
+                                            {{-- [SEGURIDAD] Solo se enlaza si tiene esquema HTTP o HTTPS valido --}}
+                                            @include('postulaciones._enlace-cv', ['postulacion' => $postulacion])
                                         </td>
                                         <td>{{ $postulacion->fecha_postulacion ? $postulacion->fecha_postulacion->format('d/m/Y') : 'N/A' }}</td>
                                         <td>
-                                            @php
-                                                $badgeClass = match ($postulacion->estado) {
-                                                    'aceptada' => 'bg-success',
-                                                    'en_revision' => 'bg-warning text-dark',
-                                                    'rechazada' => 'bg-danger',
-                                                    default => 'bg-info text-dark',
-                                                };
-                                            @endphp
-                                            <span class="badge {{ $badgeClass }}">
-                                                {{ \App\Models\Postulacion::ESTADOS[$postulacion->estado] ?? $postulacion->estado }}
-                                            </span>
+                                            @include('postulaciones._estado', ['estado' => $postulacion->estado])
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="{{ route('postulaciones.show', $postulacion) }}" class="btn btn-sm btn-outline-primary" title="Ver detalle de postulación">
+                                                <i class="bi bi-eye" aria-hidden="true"></i>
+                                                <span class="d-none d-md-inline ms-1">Detalle</span>
+                                            </a>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="text-center py-4 text-muted">
-                                            No hay postulaciones registradas para esta oferta.
+                                        <td colspan="7" class="text-center py-4 text-muted">
+                                            <p class="mb-1">No hay postulaciones registradas para esta oferta.</p>
+                                            @if ($oferta->estaActiva())
+                                                <a href="{{ route('postulaciones.create', ['oferta_id' => $oferta->id]) }}" class="btn btn-sm btn-outline-success mt-1">
+                                                    <i class="bi bi-person-plus me-1" aria-hidden="true"></i>Registrar primera postulación
+                                                </a>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforelse
@@ -132,30 +193,43 @@
 
         {{-- Columna derecha: Tarjeta de la Empresa --}}
         <div class="col-lg-4">
-            <div class="card shadow-sm border-0 sticky-top" style="top: 1.5rem;">
-                <div class="card-header bg-white py-3">
-                    <h2 class="h5 fw-bold mb-0">Información de la Empresa</h2>
+            <div class="card shadow-sm border-0 sticky-top" style="top: 5rem;">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h2 class="h5 fw-bold mb-0">Empresa</h2>
+                    @if ($oferta->empresa)
+                        <a href="{{ route('empresas.show', $oferta->empresa) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-building me-1" aria-hidden="true"></i>Ver perfil
+                        </a>
+                    @endif
                 </div>
                 <div class="card-body p-4">
-                    <h3 class="h5 fw-bold text-primary mb-2">{{ $oferta->empresa->nombre }}</h3>
-                    <p class="text-muted small mb-3">
-                        <i class="bi bi-briefcase me-1"></i>{{ $oferta->empresa->rubro }}
-                    </p>
-
-                    <ul class="list-unstyled mb-0">
-                        <li class="mb-2">
-                            <span class="d-block text-muted small">Correo de contacto:</span>
-                            <a href="mailto:{{ $oferta->empresa->correo_contacto }}" class="text-decoration-none">
-                                <i class="bi bi-envelope me-1"></i>{{ $oferta->empresa->correo_contacto }}
+                    @if ($oferta->empresa)
+                        <h3 class="h5 fw-bold text-primary mb-2">
+                            <a href="{{ route('empresas.show', $oferta->empresa) }}" class="text-decoration-none">
+                                {{ $oferta->empresa->nombre }}
                             </a>
-                        </li>
-                        <li class="mb-0">
-                            <span class="d-block text-muted small">Teléfono:</span>
-                            <span class="text-dark">
-                                <i class="bi bi-telephone me-1"></i>{{ $oferta->empresa->telefono ?? 'No especificado' }}
-                            </span>
-                        </li>
-                    </ul>
+                        </h3>
+                        <p class="text-muted small mb-3">
+                            <i class="bi bi-briefcase me-1" aria-hidden="true"></i>{{ $oferta->empresa->rubro }}
+                        </p>
+
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2">
+                                <span class="d-block text-muted small">Correo de contacto:</span>
+                                <a href="mailto:{{ $oferta->empresa->correo_contacto }}" class="text-decoration-none">
+                                    <i class="bi bi-envelope me-1" aria-hidden="true"></i>{{ $oferta->empresa->correo_contacto }}
+                                </a>
+                            </li>
+                            <li class="mb-0">
+                                <span class="d-block text-muted small">Teléfono:</span>
+                                <span class="text-dark">
+                                    <i class="bi bi-telephone me-1" aria-hidden="true"></i>{{ $oferta->empresa->telefono ?? 'No especificado' }}
+                                </span>
+                            </li>
+                        </ul>
+                    @else
+                        <p class="text-muted mb-0">Empresa no vinculada.</p>
+                    @endif
                 </div>
             </div>
         </div>
