@@ -196,6 +196,15 @@ erDiagram
 - No se aceptan postulaciones en ofertas cerradas.
 - El enlace del CV debe tener formato de URL válida.
 
+### Reporte del caso 7
+
+El reporte está disponible en `/reporte` (`reporte.index`). Una oferta se considera activa si su
+fecha de cierre es hoy o posterior.
+
+- **Ofertas activas por modalidad.** Muestra todas las modalidades, incluidas las que tienen cero ofertas activas.
+- **Postulaciones por oferta.** Cuenta las postulaciones de cada oferta activa o cerrada, incluidas las que tienen cero.
+- **Ranking de empresas.** Incluye a las empresas con ofertas activas y las ordena de mayor a menor por la suma de vacantes de esas ofertas. Los empates se ordenan por nombre de empresa y luego por ID.
+
 ---
 
 ## Capturas de pantalla

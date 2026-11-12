@@ -96,7 +96,7 @@ class Oferta extends Model
      */
     public function scopeActivas(Builder $query): Builder
     {
-        return $query->where('fecha_cierre', '>=', today());
+        return $query->where('fecha_cierre', '>=', today()->toDateString());
     }
 
     /**

@@ -9,6 +9,21 @@
         <p class="text-muted mb-0">Resumen general de ofertas, empresas y postulaciones.</p>
     </div>
 
+    <nav class="d-flex flex-wrap gap-2 mb-4" aria-label="Módulos de la bolsa de empleo">
+        <a href="{{ route('ofertas.index') }}" class="btn btn-primary">
+            <i class="bi bi-card-list me-1" aria-hidden="true"></i>Ofertas
+        </a>
+        <a href="{{ route('empresas.index') }}" class="btn btn-outline-primary">
+            <i class="bi bi-building me-1" aria-hidden="true"></i>Empresas
+        </a>
+        <a href="{{ route('postulaciones.index') }}" class="btn btn-outline-primary">
+            <i class="bi bi-people me-1" aria-hidden="true"></i>Postulaciones
+        </a>
+        <a href="{{ route('reporte.index') }}" class="btn btn-outline-primary">
+            <i class="bi bi-bar-chart me-1" aria-hidden="true"></i>Reporte
+        </a>
+    </nav>
+
     {{-- Indicadores principales --}}
     <div class="row g-3 mb-4">
         <div class="col-6 col-lg">
@@ -38,7 +53,7 @@
         <div class="col-6 col-lg">
             <div class="card shadow-sm border-0 h-100 border-start border-success border-4">
                 <div class="card-body">
-                    <p class="text-muted small mb-1"><i class="bi bi-check-circle me-1"></i>Activas</p>
+                    <p class="text-muted small mb-1"><i class="bi bi-check-circle me-1"></i>Ofertas activas</p>
                     <p class="h3 mb-0 text-success">{{ $ofertasActivas }}</p>
                 </div>
             </div>
@@ -46,7 +61,7 @@
         <div class="col-12 col-lg">
             <div class="card shadow-sm border-0 h-100 border-start border-secondary border-4">
                 <div class="card-body">
-                    <p class="text-muted small mb-1"><i class="bi bi-x-circle me-1"></i>Cerradas</p>
+                    <p class="text-muted small mb-1"><i class="bi bi-x-circle me-1"></i>Ofertas cerradas</p>
                     <p class="h3 mb-0 text-secondary">{{ $ofertasCerradas }}</p>
                 </div>
             </div>
@@ -110,7 +125,14 @@
                                     · {{ \App\Models\Oferta::TIPOS[$oferta->tipo] ?? $oferta->tipo }}
                                 </div>
                             </div>
-                            <span class="small text-muted text-nowrap">{{ $oferta->fecha_publicacion?->format('d/m/Y') }}</span>
+                            <div class="text-end">
+                                @if ($oferta->estaActiva())
+                                    <span class="badge bg-success">Activa</span>
+                                @else
+                                    <span class="badge bg-secondary">Cerrada</span>
+                                @endif
+                                <div class="small text-muted text-nowrap">{{ $oferta->fecha_publicacion?->format('d/m/Y') }}</div>
+                            </div>
                         </li>
                     @empty
                         <li class="list-group-item text-muted">No hay ofertas registradas.</li>
@@ -120,10 +142,4 @@
         </div>
     </div>
 
-    {{-- Acceso a los modulos --}}
-    <div class="d-flex flex-wrap gap-2">
-        <a href="{{ route('ofertas.index') }}" class="btn btn-primary">
-            <i class="bi bi-card-list me-1"></i>Ofertas
-        </a>
-    </div>
 @endsection
