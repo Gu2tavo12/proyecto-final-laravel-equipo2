@@ -49,8 +49,8 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('reporte.*') || request()->is('reporte*') ? 'active' : '' }}" @if (request()->routeIs('reporte.*') || request()->is('reporte*')) aria-current="page" @endif href="{{ Route::has('reporte.index') ? route('reporte.index') : url('/reporte') }}">
-                            <i class="bi bi-file-earmark-bar-graph me-1" aria-hidden="true"></i>Reporte
+                        <a class="nav-link {{ request()->routeIs('reporte.*') || request()->is('reporte*') ? 'active' : '' }}" @if (request()->routeIs('reporte.*') || request()->is('reporte*')) aria-current="page" @endif href="{{ route('reporte.index') }}">
+                            <i class="bi bi-bar-chart me-1" aria-hidden="true"></i>Reporte
                         </a>
                     </li>
                 </ul>
